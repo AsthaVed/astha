@@ -1,0 +1,402 @@
+{% assign respond_js_secret_key = shop.domain | md5 %}
+{% unless search.terms == respond_js_secret_key %}
+<section id="pageContent">
+  <div class="container">
+    <div class="wpbSearchContainer">
+      
+      {% assign tagsInc = '' %}
+      {% assign tagArray = '' %}
+      {% assign typeArray = '' %}
+      {% for product in search.results %}
+      	{% for tag in product.tags %}
+      		{% if tag contains 'subcate:' %}
+      
+      			{% unless tagsInc contains tag %}{% capture tagsInc %}{{ tagsInc }}##{{tag}}{% endcapture %}{% endunless %}
+      			{% assign catName = tag | remove: 'categ:' | append: ',' %}
+      			{% assign tagArray = tagArray | append: catName %}
+      		
+      		{% endif %}
+      		{% if tag contains 'webcat:' %}
+      			
+      			{% unless tagsInc contains tag %}{% capture tagsInc %}{{ tagsInc }}##{{tag}}{% endcapture %}{% endunless %}
+                {% assign typeName = tag | remove: 'subcate:' | append: ',' %}
+                {% assign typeArray = typeArray | append: typeName %}
+      
+      		{% endif %}
+      	{% endfor %}
+      {% endfor %}
+
+      {% assign tagArray = tagArray | split: ',' %}
+      {% assign uniqTags = tagArray | uniq %}
+      
+      {% assign typeArray = typeArray | split: ',' %}
+      {% assign uniqTypes = typeArray | uniq %}
+
+      {% paginate search.results by 12 %}
+      {% if search.performed %}
+      {% if search.results_count == 0 %}
+      <h1 class="wpbSearchTitle">{{ 'general.search.no_results_html' | t: terms: search.terms }}</h1>
+      {% else %}
+      <h1 class="wpbSearchTitle">{{ 'general.search.results_for_html' | t: terms: search.terms }}</h1>
+      {% endif %}
+      {% else %}
+      <h1 class="wpbSearchTitle">{{ 'general.search.title' | t }}</h1>
+      {% endif %}
+      {% if search.performed %}
+      <div class="serch_pg_conatiner">
+
+        <div class="sidebar-product-filter">
+          {% section 'sidebartype' %}
+          {% section 'sidebarprice' %}
+          {% section 'sidebartag' %}
+          {% section 'sidebarproductlist' %}
+          <div class="pro-filter-wrp ">
+            <form id="wpbSearchbox" class="formSearch" action="/search" method="get">
+              <input type="hidden" name="type" value="product">
+              <input class="wpbSearch form-control" type="search" name="q" value="" placeholder="Search" autocomplete="off">
+              <button id="wpbSearchButton" class="btnTuluSearch" style="height: 38px;">
+                <i class="ti-search"></i>
+                <span class="btnSearchText"></span>
+              </button>
+              <ul class="wpbAjaxSearch" style="display: none;"></ul>
+            </form>
+            
+            <button type="button" class="btn btn-primary" data-toggle="collapse" data-target="#demo">Filters  <i class="fa fa-caret-down" aria-hidden="true"></i></button>
+            <div id="demo" class="collapse in">
+              <div id="accordion" class="accordion">
+                <div class="card mb-0">
+                  
+                  <div class="card-header collapsed" data-toggle="collapse" id="hide_one" href="#collapseOne">
+                    <a class="card-title">
+                      Part Categories
+                    </a>
+                    <span class="down_arrw"><i class="fa fa-angle-down" aria-hidden="true"></i></span>
+                  </div>
+                  <div id="collapseOne" class="card-body collapse in" data-parent="#accordion" >
+                    <div class="filter filters_producttype product-type">
+                      <div class="filter_scroll ">
+                        <ul class="cat_list">
+                          
+                          {% for tag in uniqTags %}
+                          <li class="serch_filter">
+                           
+                              <label class="prdt_filtrs sbctfilter" style="display: inline-block;width: 90%;" for="{{ tag }}">{{ tag | remove:'subcate:' }}</label><span class="label_close">&times;</span>
+                              <i class="fa fa-times sbct" aria-hidden="true"></i>
+                               
+                          </li>
+                          {% endfor %}
+                          
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-header collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                    <a class="card-title">
+                      Part Type
+                    </a>
+                    <span class="down_arrw"><i class="fa fa-angle-down" aria-hidden="true"></i></span>
+                  </div>
+                  <div id="collapseTwo" class="card-body collapse in" data-parent="#accordion" id="hide_two">
+                    <div class="filter filters_parts parts_filter">
+                      <div class="filter_scroll ">
+                        <ul class="cat_list">
+                          
+                          {% for type in uniqTypes %}
+                          <li class="serch_filter">
+                           
+                              <label class="prdt_filtrs wbctfilter" style="display: inline-block;width: 90%;" for="{{ type }}">{{ type | remove:'webcat:' }}</label><span class="label_close">&times;</span>
+                              <i class="fa fa-times wbct" aria-hidden="true"></i>
+                                
+                          </li>
+                          {% endfor %}
+                             
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="proList grid">
+          <div class="wpbFlexRow flexRow">
+            {% for product in search.results %}
+            {% include 'product-grid-item' with 'col-xs-12 col-sm-6 col-md-3' %}
+            {% endfor %}
+          </div>
+        </div>
+        
+      </div>
+      {% endif %}
+      {% if paginate.pages > 1 %}
+      <div id="searchPagination">
+        {% include 'wpb-pagination' %}
+      </div>
+      {% endif %}
+      {% endpaginate %}
+    </div>
+  </div>
+</section>
+{% else %}
+{% include 'respond' %}
+{% layout none %}
+{% endunless %}
+
+<style>
+  .serch_pg_conatiner {
+    display: flex;
+  }
+  .sidebar-product-filter {
+    flex: 0 0 20%;
+    margin-right: 25px;
+  } 
+  .proList.grid {
+    flex: 0 0 80%;
+  } 
+  .pro-filter-wrp button.btn.btn-primary {
+    width: 100%;
+    background: transparent;
+    color: #000;
+    font-size: 16px;
+    letter-spacing: 0;
+    line-height: 28px;
+    text-align: left;
+    padding: 10px 29px 10px 8px;
+    text-transform: capitalize;
+    font-weight: 600;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 0;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+  } 
+  .filter-list {
+    padding: 22px;
+    border: 1px solid #d6d6d6;
+    border-top: none;
+  } 
+  .card-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    background: transparent;
+    padding: 25px 3px;
+    margin: 0 15px;
+    border-top: 1px solid #ccc;
+  }
+  .fa-caret-down:before {
+    content: "\f0d7";
+    top: 14px;
+    position: absolute;
+    right: 12px;
+  }  
+  a.card-title {
+    color: #000;
+  }
+  .fa-angle-down:before {
+    content: "\f107";
+    color: #000;
+  }
+  ul.cat_list {
+    list-style: none;
+    padding-left: 20px;
+  } 
+  .card {
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+  }
+  .card-body {
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    min-height: 1px;
+    padding: 1.25rem;
+    padding-top: 0;
+  } 
+  .filter {
+    max-height: 140px;
+    overflow-y: auto;
+  } 
+  ul.cat_list {
+    padding: 5px;
+  }  
+  .card.mb-0 .card-header:first-child {
+    border: none;
+  }  
+  .template-search #wpbBreadcrumbs {
+    padding: 33px 0;
+    margin: 30px 0 10px;
+  } 
+  .wpbSearchTitle {
+    padding: 0px 0px 40px;
+  }
+  .fa-times{
+    display:none;
+  }
+  .label_close{
+    display: none;
+    float: right;
+    font-weight: 700;
+    color: #000;
+    text-shadow: 0 1px 0 white;
+}
+  .label_close:hover, .label_close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: .5;
+}
+  }
+</style>
+<script>
+  $(document).ready(function(){
+  	var text = $(".wpbSearchTitle").text();
+    if(text.includes("subcate:")){
+    	var new_text = text.replace("subcate:","");
+      	$(".wpbSearchTitle").text(new_text);
+    }
+
+  })
+</script>
+
+<script>
+   $(document).ready(function(){
+      var currentUrl = window.location.href;
+      const urlUpdateParts = currentUrl.split('+');
+      console.log("urlUpdateParts: ", urlUpdateParts);
+
+    $(".wbctfilter").each(function() {
+        var get_attribute = $(this).attr("for");
+        if (urlUpdateParts.includes(get_attribute)) {
+          var length_collapseOne = $('#collapseOne').find('.cat_list li').length;
+          if(length_collapseOne == 0){
+            $("#hide_one").hide();
+            $("#collapseOne").hide();
+          }
+          // console.log('Number of li elements within cat_list:', length_collapseOne);
+          // alert("astha");
+          $(this).next(".label_close").css({
+            'display': 'block',
+          });
+        }
+      else{
+        // console.log("Else block executed for " + get_attribute);
+        $(this).next(".label_close").css({
+                  'display': 'none',
+              });
+      }
+    });
+
+    $(".sbctfilter").each(function() {
+      
+        var get_attribute = $(this).attr("for");
+            if (urlUpdateParts.includes(get_attribute)) {
+              var length_collapseTwo = $('#collapseTwo').find('.cat_list li').length;
+          if(length_collapseTwo == 0){
+            $("#hide_two").hide();
+            $("#collapseTwo").hide();
+          }
+          // console.log('Number of li elements within cat_list:', length_collapseTwo);
+          // alert("astha");
+              $(this).next(".label_close").css({
+                  'display': 'block',
+              });
+            }
+      else{
+        // console.log("Else block executed for " + get_attribute);
+        $(this).next(".label_close").css({
+                  'display': 'none',
+              });
+      }
+    });
+     
+     $(".wbctfilter").on("click", function(event){
+        event.preventDefault();
+        var forAttributeValue = $(this).attr("for"); 
+         // var newText = forAttributeValue.replace(/\s+/g, '%'); 
+         // console.log("Value of 'for' attribute:", newText);
+         //  alert("astha");
+        $(this).next(".label_close").css({
+          'display': 'block',
+        });
+       
+if (currentUrl.includes('webcate')) {
+   for (var i = 0; i < urlUpdateParts.length; i++) {
+            if (urlUpdateParts[i].includes('webcate')) {
+                urlUpdateParts[i] = forAttributeValue;
+              // console.log(urlUpdateParts);
+              const modifyUrl = urlUpdateParts.join('+');
+              window.location.href = modifyUrl;
+              // alert("astha");
+              break;
+            }
+        }
+}
+      
+        if (!urlUpdateParts.includes(forAttributeValue)) {
+          console.log("Value not present in the URL");
+          var updateUrl = currentUrl + "+" + forAttributeValue;
+          window.location.href = updateUrl;
+        } else {
+          console.log("Value already present in the URL");
+        }   
+     });      
+
+     $(".sbctfilter").on("click", function(event){
+        event.preventDefault();
+      
+        var forAttributeValue = $(this).attr("for"); 
+        $(this).next(".label_close").css({
+          'display': 'block',
+        });
+
+if (currentUrl.includes('subcate')) {
+   for (var i = 0; i < urlUpdateParts.length; i++) {
+            if (urlUpdateParts[i].includes('subcate')) {
+                urlUpdateParts[i] = forAttributeValue;
+              // console.log(urlUpdateParts);
+              const modifyUrl = urlUpdateParts.join('+');
+              window.location.href = modifyUrl;
+              // alert("astha");
+              break;
+            }
+        }
+       }
+       
+        // console.log("Value of 'for' attribute:", forAttributeValue);
+        if (!urlUpdateParts.includes(forAttributeValue)) {
+          console.log("Value not present in the URL");
+          var updateUrl = currentUrl + "+" + forAttributeValue;
+          window.location.href = updateUrl;
+        } else {
+          console.log("Value already present in the URL");
+          // Remove the forAttributeValue from the URL
+        
+        }  
+     });
+      
+     $(".label_close").on("click", function(event){
+        $(this).css({
+          'display': 'none',
+        });
+        var forLabelValue = $(this).prev().attr("for"); 
+        const filteredUrlParts = urlUpdateParts.filter(part => !part.includes(forLabelValue));
+        const modifiedUrl = filteredUrlParts.join('+');
+        window.location.href = modifiedUrl;
+     }); 
+   });
+</script>
